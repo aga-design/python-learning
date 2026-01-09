@@ -1,0 +1,1777 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head><meta property="og:title" content="Python 互動式學習環境 -  Kuse AI"><meta property="og:description" content="Python 互動式學習環境"><meta property="og:url" content="https://www.kuse.ai/pages/Python-%E4%BA%92%E5%8B%95%E5%BC%8F%E5%AD%B8%E7%BF%92%E7%92%B0%E5%A2%83/gtUmvDYmKajNkonuFGGdWw"><meta property="og:type" content="article"><meta property="og:site_name" content="Kuse AI"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Python 互動式學習環境 -  Kuse AI"><meta name="twitter:description" content="Python 互動式學習環境"><meta name="twitter:site" content="@kuseHQ"><link rel="canonical" href="https://www.kuse.ai/pages/Python-%E4%BA%92%E5%8B%95%E5%BC%8F%E5%AD%B8%E7%BF%92%E7%92%B0%E5%A2%83/gtUmvDYmKajNkonuFGGdWw"><meta name="description" content="Python 互動式學習環境">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python 互動式學習環境 -  Kuse AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/6.65.7/mode/python/python.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'PingFang TC', 'Poppins', sans-serif;
+            background: #1E1E1E;
+            color: #CCCCCC;
+            overflow: hidden;
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            background: #2D2D30;
+            padding: 16px 24px;
+            border-bottom: 1px solid #3E3E42;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #FFFFFF;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .theme-toggle, .font-size-control {
+            background: #3E3E42;
+            border: none;
+            color: #CCCCCC;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .theme-toggle:hover, .font-size-control:hover {
+            background: #4E4E52;
+        }
+
+        .content-wrapper {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: #252526;
+            border-right: 1px solid #3E3E42;
+            overflow-y: auto;
+            padding: 16px 0;
+        }
+
+        .sidebar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: #1E1E1E;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: #424242;
+            border-radius: 4px;
+        }
+
+        .chapter {
+            margin-bottom: 8px;
+        }
+
+        .chapter-title {
+            padding: 8px 16px;
+            font-weight: 600;
+            color: #FFFFFF;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .chapter-title:hover {
+            background: #2D2D30;
+        }
+
+        .chapter-icon {
+            transition: transform 0.2s;
+        }
+
+        .chapter.expanded .chapter-icon {
+            transform: rotate(90deg);
+        }
+
+        .section-list {
+            display: none;
+            padding-left: 12px;
+        }
+
+        .chapter.expanded .section-list {
+            display: block;
+        }
+
+        .section-item {
+            padding: 6px 16px;
+            cursor: pointer;
+            color: #CCCCCC;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-item:hover {
+            background: #2D2D30;
+            color: #FFFFFF;
+        }
+
+        .section-item.active {
+            background: #007ACC;
+            color: #FFFFFF;
+        }
+
+        .section-item.completed::after {
+            content: '✓';
+            color: #4EC9B0;
+            font-weight: bold;
+        }
+
+        .main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .problem-description {
+            background: #252526;
+            padding: 20px;
+            border-bottom: 1px solid #3E3E42;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .problem-description h2 {
+            color: #FFFFFF;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+
+        .problem-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin-left: 8px;
+        }
+
+        .badge-easy {
+            background: #4EC9B0;
+            color: #000000;
+        }
+
+        .badge-medium {
+            background: #DCDCAA;
+            color: #000000;
+        }
+
+        .badge-hard {
+            background: #F48771;
+            color: #000000;
+        }
+
+        .problem-description p {
+            color: #CCCCCC;
+            line-height: 1.6;
+            margin-top: 12px;
+        }
+
+        .expected-output {
+            margin-top: 12px;
+            padding: 12px;
+            background: #1E1E1E;
+            border-left: 3px solid #007ACC;
+            border-radius: 4px;
+        }
+
+        .expected-output strong {
+            color: #4EC9B0;
+        }
+
+        .editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .CodeMirror {
+            height: 100% !important;
+            font-family: 'Fira Code', 'Monaco', 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .CodeMirror-gutters {
+            background: #1E1E1E;
+            border-right: 1px solid #3E3E42;
+        }
+
+        .CodeMirror-linenumber {
+            color: #858585;
+        }
+
+        .error-line {
+            background: rgba(244, 135, 113, 0.2);
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 12px;
+            padding: 12px 20px;
+            background: #252526;
+            border-top: 1px solid #3E3E42;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #007ACC;
+            color: #FFFFFF;
+        }
+
+        .btn-primary:hover {
+            background: #005A9E;
+        }
+
+        .btn-secondary {
+            background: #3E3E42;
+            color: #CCCCCC;
+        }
+
+        .btn-secondary:hover {
+            background: #4E4E52;
+        }
+
+        .btn-success {
+            background: #4EC9B0;
+            color: #000000;
+        }
+
+        .btn-success:hover {
+            background: #3EA890;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .output-panel {
+            width: 400px;
+            background: #1E1E1E;
+            border-left: 1px solid #3E3E42;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .output-header {
+            padding: 12px 16px;
+            background: #252526;
+            border-bottom: 1px solid #3E3E42;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .output-header h3 {
+            color: #FFFFFF;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .output-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            font-family: 'Fira Code', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .output-content::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .output-content::-webkit-scrollbar-track {
+            background: #1E1E1E;
+        }
+
+        .output-content::-webkit-scrollbar-thumb {
+            background: #424242;
+            border-radius: 4px;
+        }
+
+        .output-success {
+            color: #4EC9B0;
+        }
+
+        .output-error {
+            color: #F48771;
+        }
+
+        .output-info {
+            color: #CCCCCC;
+        }
+
+        .error-explanation {
+            margin-top: 16px;
+            padding: 16px;
+            background: #252526;
+            border-left: 3px solid #F48771;
+            border-radius: 4px;
+        }
+
+        .error-explanation h4 {
+            color: #F48771;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .error-explanation p {
+            color: #CCCCCC;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-bottom: 8px;
+        }
+
+        .error-explanation ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .error-explanation li {
+            color: #CCCCCC;
+            font-size: 13px;
+            margin-bottom: 4px;
+            padding-left: 16px;
+            position: relative;
+        }
+
+        .error-explanation li::before {
+            content: '→';
+            position: absolute;
+            left: 0;
+            color: #007ACC;
+        }
+
+        .hint-panel {
+            padding: 16px;
+            background: #252526;
+            border-top: 1px solid #3E3E42;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .hint-item {
+            padding: 8px 12px;
+            background: #1E1E1E;
+            border-left: 3px solid #DCDCAA;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            color: #CCCCCC;
+            font-size: 13px;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #3E3E42;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #4EC9B0;
+            transition: width 0.3s;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #3E3E42;
+            border-top-color: #007ACC;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .kuse-branding {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(45, 45, 48, 0.9);
+            border-radius: 8px;
+            color: #CCCCCC;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 100;
+        }
+
+        .kuse-branding:hover {
+            background: rgba(0, 122, 204, 0.9);
+            color: #FFFFFF;
+            transform: translateY(-2px);
+        }
+
+        .kuse-branding svg {
+            height: 1em;
+        }
+
+        @media (max-width: 1024px) {
+            .output-panel {
+                width: 320px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .content-wrapper {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                max-height: 200px;
+            }
+
+            .output-panel {
+                width: 100%;
+                height: 200px;
+            }
+        }
+    </style>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Python 互動式學習環境 -  Kuse AI","description":"Python 互動式學習環境","url":"https://www.kuse.ai/pages/Python-%E4%BA%92%E5%8B%95%E5%BC%8F%E5%AD%B8%E7%BF%92%E7%92%B0%E5%A2%83/gtUmvDYmKajNkonuFGGdWw","author":{"@type":"Organization","name":"Kuse AI"},"publisher":{"@type":"Organization","name":"Kuse AI","url":"https://www.kuse.ai"},"inLanguage":"en","alternateName":"Python 互動式學習環境"}</script></head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="main-container">
+        <div class="header">
+            <h1>🐍 Python 互動式學習環境</h1>
+            <div class="header-controls">
+                <button class="font-size-control" id="fontSizeBtn" title="調整字體大小">A+</button>
+                <button class="theme-toggle" id="themeToggle" title="切換主題">🌙</button>
+                <div style="color: #4EC9B0; font-size: 14px;">進度: <span id="progressText">0/43</span></div>
+            </div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+
+        <div class="content-wrapper">
+            <div class="sidebar" id="sidebar"></div>
+
+            <div class="main-area">
+                <div class="problem-description" id="problemDescription">
+                    <h2 id="problemTitle">選擇一個練習題開始學習</h2>
+                    <p id="problemDesc">請從左側選單選擇一個章節和練習題。</p>
+                </div>
+
+                <div class="editor-container">
+                    <textarea id="codeEditor"></textarea>
+                </div>
+
+                <div class="control-buttons">
+                    <button class="btn btn-primary" id="runBtn">▶ 執行 (Ctrl+Enter)</button>
+                    <button class="btn btn-secondary" id="resetBtn">↻ 重置 (Ctrl+R)</button>
+                    <button class="btn btn-secondary" id="hintBtn">💡 提示 (Ctrl+H)</button>
+                    <button class="btn btn-success" id="nextBtn">下一題 →</button>
+                    <button class="btn btn-secondary" id="formatBtn">✨ 格式化</button>
+                </div>
+            </div>
+
+            <div class="output-panel">
+                <div class="output-header">
+                    <h3>📤 執行結果</h3>
+                    <button class="btn btn-secondary" style="padding: 4px 8px; font-size: 12px;" id="clearOutputBtn">清除</button>
+                </div>
+                <div class="output-content" id="outputContent">
+                    <div class="output-info">等待執行...</div>
+                </div>
+                <div class="hint-panel hidden" id="hintPanel"></div>
+            </div>
+        </div>
+    </div>
+
+    <a href="https://kuse.ai" target="_blank" class="kuse-branding">
+        <span>made with</span>
+        <svg viewBox="0,0,160,44" xmlns="http://www.w3.org/2000/svg"><path d="m.01,20.65C-.43,8.25,9.3-2.03,22.04.34,34.78,2.72,43.29,8.32,43.29,22.9s-8.66,19.01-22.03,20.3C7.9,44.5.46,33.05.01,20.65z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="m146.76,7.94c8.07,0,13.24,6.15,13.24,14.58v1.39h-20.75c.45,4.05,3.51,7.37,8.57,7.37,2.62,0,5.73-1.05,7.62-2.94l2.67,3.83c-2.67,2.55-6.62,3.88-10.9,3.88-8.07,0-14.08-5.6-14.08-14.08,0-7.76,5.67-14.02,13.63-14.02zm0,4.77c-5.01,0-7.29,3.83-7.57,7.1h15.13c-.11-3.16-2.28-7.1-7.57-7.1z" fill="currentColor"/><path d="m86.64,24.49c0,4.15,2.39,6.84,6.84,6.84,4.4,0,6.84-2.69,6.84-6.84V8.55h5.37v16.33c0,6.7-4.06,11.14-12.21,11.14-8.21,0-12.21-4.5-12.21-11.09V8.55h5.37v15.94zm32.99-16.55c4.49,0,8.06,1.47,10.6,3.86l-2.59,3.81c-2.05-2-5.28-3.08-8.06-3.08-2.88,0-4.84,1.37-4.84,3.32,0,1.91,2.64,2.54,5.81,3.27,4.59,1.08,10.26,2.4,10.26,8.46,0,4.94-3.76,8.41-11.14,8.41-4.98,0-8.94-1.76-11.24-4.11l2.54-4.11c1.86,1.91,5.18,3.67,8.84,3.67,3.91,0,5.57-1.66,5.57-3.62,0-2.3-2.88-2.98-6.21-3.76-4.54-1.08-9.87-2.3-9.87-8.06,0-4.5,4.2-8.06,10.31-8.06zM60.79,20.82,71.44,8.55h6.5L66.46,21.26,78.82,35.44h-6.5l-9.28-11.1-2.25,2.49v8.6h-5.33V8.55h5.33v12.27z" fill="currentColor"/></svg>
+    </a>
+
+    <script>
+        let pyodide;
+        let editor;
+        let currentProblemIndex = 0;
+        let currentHintIndex = 0;
+        let completedProblems = new Set();
+        let currentFontSize = 14;
+
+        const problems = [
+            {
+                id: `basics-001`,
+                title: `第一個 Python 程式`,
+                chapter: `基礎入門`,
+                section: `Hello World`,
+                difficulty: `easy`,
+                description: `請使用 print() 函數輸出 "Hello, Python!" 到控制台。這是你的第一個 Python 程式！`,
+                starterCode: `# 在這裡寫下你的程式碼\n`,
+                expectedOutput: `Hello, Python!\n`,
+                hints: [
+                    `使用 print() 函數來輸出文字`,
+                    `字符串需要用引號包圍（單引號或雙引號都可以）`,
+                    `完整答案：print('Hello, Python!')`
+                ],
+                solution: `print('Hello, Python!')`,
+                explanation: `print() 是 Python 的內建函數，用於輸出內容到控制台。字符串可以用單引號或雙引號包圍。`
+            },
+            {
+                id: `basics-002`,
+                title: `變量定義`,
+                chapter: `基礎入門`,
+                section: `變量與賦值`,
+                difficulty: `easy`,
+                description: `創建一個變量 name，賦值為你的名字，然後輸出 "我的名字是：" 加上你的名字。`,
+                starterCode: `# 定義變量 name\n\n# 輸出結果\n`,
+                expectedOutput: `我的名字是：小明\n`,
+                hints: [
+                    `使用等號 = 來賦值`,
+                    `可以使用 + 連接字符串`,
+                    `參考答案：name = "小明"\\nprint("我的名字是：" + name)`
+                ],
+                solution: `name = "小明"\nprint("我的名字是：" + name)`,
+                explanation: `變量是用來儲存數據的容器。Python 中不需要聲明變量類型，直接賦值即可。`
+            },
+            {
+                id: `basics-003`,
+                title: `簡單運算`,
+                chapter: `基礎入門`,
+                section: `運算練習`,
+                difficulty: `easy`,
+                description: `計算 15 + 27 的結果並輸出。`,
+                starterCode: `# 計算 15 + 27\n`,
+                expectedOutput: `42\n`,
+                hints: [
+                    `直接在 print() 中進行計算`,
+                    `Python 會自動計算表達式的值`,
+                    `答案：print(15 + 27)`
+                ],
+                solution: `print(15 + 27)`,
+                explanation: `Python 可以直接在 print() 函數中進行數學運算。`
+            },
+            {
+                id: `basics-004`,
+                title: `print 函數多參數`,
+                chapter: `基礎入門`,
+                section: `print 函數使用`,
+                difficulty: `easy`,
+                description: `使用 print() 函數同時輸出三個值：數字 100、字符串 "分"、和字符串 "滿分"，用空格分隔。`,
+                starterCode: `# 輸出：100 分 滿分\n`,
+                expectedOutput: `100 分 滿分\n`,
+                hints: [
+                    `print() 可以接受多個參數，用逗號分隔`,
+                    `多個參數會自動用空格連接`,
+                    `答案：print(100, "分", "滿分")`
+                ],
+                solution: `print(100, "分", "滿分")`,
+                explanation: `print() 函數可以接受多個參數，它們會被自動用空格連接後輸出。`
+            },
+            {
+                id: `syntax-001`,
+                title: `數據類型識別`,
+                chapter: `基礎語法`,
+                section: `變量與數據類型`,
+                difficulty: `easy`,
+                description: `創建四個變量：整數 age=25、浮點數 height=175.5、字符串 city="台北"、布林值 is_student=True，然後使用 type() 函數輸出 age 的類型。`,
+                starterCode: `# 創建變量\n\n# 輸出 age 的類型\n`,
+                expectedOutput: `<class 'int'>\n`,
+                hints: [
+                    `使用 type() 函數可以查看變量類型`,
+                    `布林值 True/False 首字母要大寫`,
+                    `答案：age=25\\nprint(type(age))`
+                ],
+                solution: `age = 25\nheight = 175.5\ncity = "台北"\nis_student = True\nprint(type(age))`,
+                explanation: `Python 有多種基本數據類型：int（整數）、float（浮點數）、str（字符串）、bool（布林值）。type() 函數可以查看變量的類型。`
+            },
+            {
+                id: `syntax-002`,
+                title: `算術運算符`,
+                chapter: `基礎語法`,
+                section: `運算符`,
+                difficulty: `easy`,
+                description: `計算並輸出：10 除以 3 的商（整數除法）和餘數。`,
+                starterCode: `# 計算 10 除以 3 的商和餘數\n`,
+                expectedOutput: `3\n1\n`,
+                hints: [
+                    `整數除法使用 // 運算符`,
+                    `取餘數使用 % 運算符`,
+                    `答案：print(10 // 3)\\nprint(10 % 3)`
+                ],
+                solution: `print(10 // 3)\nprint(10 % 3)`,
+                explanation: `// 是整數除法運算符，只保留商的整數部分。% 是取餘運算符，返回除法的餘數。`
+            },
+            {
+                id: `syntax-003`,
+                title: `字符串操作`,
+                chapter: `基礎語法`,
+                section: `字符串`,
+                difficulty: `easy`,
+                description: `創建兩個字符串變量 first_name="張" 和 last_name="三"，將它們連接成完整姓名並輸出。`,
+                starterCode: `# 創建變量\n\n# 連接並輸出\n`,
+                expectedOutput: `張三\n`,
+                hints: [
+                    `使用 + 運算符連接字符串`,
+                    `字符串連接不會自動添加空格`,
+                    `答案：first_name="張"\\nlast_name="三"\\nprint(first_name + last_name)`
+                ],
+                solution: `first_name = "張"\nlast_name = "三"\nprint(first_name + last_name)`,
+                explanation: `字符串可以使用 + 運算符進行連接。連接時不會自動添加空格，需要手動添加。`
+            },
+            {
+                id: `syntax-004`,
+                title: `類型轉換`,
+                chapter: `基礎語法`,
+                section: `類型轉換`,
+                difficulty: `medium`,
+                description: `將字符串 "123" 轉換為整數，加上 77，然後輸出結果。`,
+                starterCode: `# 字符串轉整數並計算\n`,
+                expectedOutput: `200\n`,
+                hints: [
+                    `使用 int() 函數將字符串轉為整數`,
+                    `轉換後可以進行數學運算`,
+                    `答案：print(int("123") + 77)`
+                ],
+                solution: `print(int("123") + 77)`,
+                explanation: `int() 函數可以將字符串轉換為整數。類似的還有 float()、str() 等轉換函數。`
+            },
+            {
+                id: `syntax-005`,
+                title: `f-string 格式化`,
+                chapter: `基礎語法`,
+                section: `字符串格式化`,
+                difficulty: `medium`,
+                description: `使用 f-string 格式化輸出：創建變量 name="李四"、age=30，輸出 "李四今年30歲"。`,
+                starterCode: `# 創建變量\n\n# 使用 f-string 輸出\n`,
+                expectedOutput: `李四今年30歲\n`,
+                hints: [
+                    `f-string 以 f 開頭，變量放在 {} 中`,
+                    `格式：f"文字{變量}文字"`,
+                    `答案：name="李四"\\nage=30\\nprint(f"{name}今年{age}歲")`
+                ],
+                solution: `name = "李四"\nage = 30\nprint(f"{name}今年{age}歲")`,
+                explanation: `f-string 是 Python 3.6+ 引入的格式化字符串方法，使用 f"..." 語法，在 {} 中可以直接放入變量或表達式。`
+            },
+            {
+                id: `syntax-006`,
+                title: `輸入輸出`,
+                chapter: `基礎語法`,
+                section: `輸入輸出`,
+                difficulty: `easy`,
+                description: `使用 input() 獲取用戶輸入的名字（假設輸入 "王五"），然後輸出 "歡迎，王五！"。注意：在 Pyodide 環境中，input() 需要特殊處理，這裡我們直接模擬輸入。`,
+                starterCode: `# 模擬輸入\nname = "王五"\n# 輸出歡迎信息\n`,
+                expectedOutput: `歡迎，王五！\n`,
+                hints: [
+                    `直接使用變量 name`,
+                    `使用 f-string 或字符串連接`,
+                    `答案：print(f"歡迎，{name}！")`
+                ],
+                solution: `name = "王五"\nprint(f"歡迎，{name}！")`,
+                explanation: `input() 函數用於獲取用戶輸入。在瀏覽器環境中，我們通過預設變量來模擬輸入。`
+            },
+            {
+                id: `control-001`,
+                title: `if 條件判斷`,
+                chapter: `控制流程`,
+                section: `條件語句`,
+                difficulty: `easy`,
+                description: `創建變量 score=85，如果分數大於等於 60，輸出 "及格"，否則輸出 "不及格"。`,
+                starterCode: `score = 85\n# 寫下條件判斷\n`,
+                expectedOutput: `及格\n`,
+                hints: [
+                    `使用 if-else 語句`,
+                    `條件後面要加冒號 :`,
+                    `答案：if score >= 60:\\n    print("及格")\\nelse:\\n    print("不及格")`
+                ],
+                solution: `score = 85\nif score >= 60:\n    print("及格")\nelse:\n    print("不及格")`,
+                explanation: `if-else 語句用於條件判斷。注意 Python 使用縮排（通常 4 個空格）來表示代碼塊。`
+            },
+            {
+                id: `control-002`,
+                title: `if-elif-else 多條件`,
+                chapter: `控制流程`,
+                section: `條件語句`,
+                difficulty: `medium`,
+                description: `創建變量 score=75，根據分數輸出等級：90 以上 "優秀"、80-89 "良好"、60-79 "及格"、60 以下 "不及格"。`,
+                starterCode: `score = 75\n# 寫下多條件判斷\n`,
+                expectedOutput: `及格\n`,
+                hints: [
+                    `使用 if-elif-else 結構`,
+                    `從高分到低分依次判斷`,
+                    `答案：if score >= 90:\\n    print("優秀")\\nelif score >= 80:\\n    print("良好")\\nelif score >= 60:\\n    print("及格")\\nelse:\\n    print("不及格")`
+                ],
+                solution: `score = 75\nif score >= 90:\n    print("優秀")\nelif score >= 80:\n    print("良好")\nelif score >= 60:\n    print("及格")\nelse:\n    print("不及格")`,
+                explanation: `elif 是 else if 的縮寫，用於多條件判斷。條件會從上到下依次檢查，第一個為真的條件會被執行。`
+            },
+            {
+                id: `control-003`,
+                title: `for 循環遍歷`,
+                chapter: `控制流程`,
+                section: `循環語句`,
+                difficulty: `easy`,
+                description: `使用 for 循環輸出 1 到 5 的數字，每個數字一行。`,
+                starterCode: `# 使用 for 循環\n`,
+                expectedOutput: `1\n2\n3\n4\n5\n`,
+                hints: [
+                    `使用 range(1, 6) 生成 1 到 5`,
+                    `for 循環語法：for 變量 in 序列:`,
+                    `答案：for i in range(1, 6):\\n    print(i)`
+                ],
+                solution: `for i in range(1, 6):\n    print(i)`,
+                explanation: `for 循環用於遍歷序列。range(1, 6) 生成 1 到 5 的數字（不包含 6）。`
+            },
+            {
+                id: `control-004`,
+                title: `while 循環`,
+                chapter: `控制流程`,
+                section: `循環語句`,
+                difficulty: `medium`,
+                description: `使用 while 循環計算 1 到 10 的總和並輸出。`,
+                starterCode: `# 使用 while 循環計算總和\n`,
+                expectedOutput: `55\n`,
+                hints: [
+                    `創建變量 sum=0 和 i=1`,
+                    `循環條件 i <= 10`,
+                    `答案：sum=0\\ni=1\\nwhile i<=10:\\n    sum+=i\\n    i+=1\\nprint(sum)`
+                ],
+                solution: `sum = 0\ni = 1\nwhile i <= 10:\n    sum += i\n    i += 1\nprint(sum)`,
+                explanation: `while 循環在條件為真時重複執行。注意要更新循環變量，避免無限循環。`
+            },
+            {
+                id: `control-005`,
+                title: `break 語句`,
+                chapter: `控制流程`,
+                section: `break 和 continue`,
+                difficulty: `medium`,
+                description: `使用 for 循環遍歷 1 到 10，當遇到 5 時停止循環，輸出 1 到 4。`,
+                starterCode: `# 使用 break 停止循環\n`,
+                expectedOutput: `1\n2\n3\n4\n`,
+                hints: [
+                    `在循環中使用 if 判斷`,
+                    `使用 break 跳出循環`,
+                    `答案：for i in range(1, 11):\\n    if i == 5:\\n        break\\n    print(i)`
+                ],
+                solution: `for i in range(1, 11):\n    if i == 5:\n        break\n    print(i)`,
+                explanation: `break 語句用於立即終止循環，跳出整個循環體。`
+            },
+            {
+                id: `control-006`,
+                title: `continue 語句`,
+                chapter: `控制流程`,
+                section: `break 和 continue`,
+                difficulty: `medium`,
+                description: `使用 for 循環輸出 1 到 10 中的奇數（跳過偶數）。`,
+                starterCode: `# 使用 continue 跳過偶數\n`,
+                expectedOutput: `1\n3\n5\n7\n9\n`,
+                hints: [
+                    `使用 % 運算符判斷奇偶`,
+                    `偶數時使用 continue 跳過`,
+                    `答案：for i in range(1, 11):\\n    if i % 2 == 0:\\n        continue\\n    print(i)`
+                ],
+                solution: `for i in range(1, 11):\n    if i % 2 == 0:\n        continue\n    print(i)`,
+                explanation: `continue 語句用於跳過本次循環的剩餘代碼，直接進入下一次循環。`
+            },
+            {
+                id: `data-001`,
+                title: `列表創建`,
+                chapter: `數據結構`,
+                section: `列表 List`,
+                difficulty: `easy`,
+                description: `創建一個包含數字 10, 20, 30, 40, 50 的列表，並輸出該列表。`,
+                starterCode: `# 創建列表並輸出\n`,
+                expectedOutput: `[10, 20, 30, 40, 50]\n`,
+                hints: [
+                    `列表使用方括號 [] 創建`,
+                    `元素之間用逗號分隔`,
+                    `答案：numbers = [10, 20, 30, 40, 50]\\nprint(numbers)`
+                ],
+                solution: `numbers = [10, 20, 30, 40, 50]\nprint(numbers)`,
+                explanation: `列表是 Python 中最常用的數據結構，可以存儲多個元素，使用方括號創建。`
+            },
+            {
+                id: `data-002`,
+                title: `列表索引`,
+                chapter: `數據結構`,
+                section: `列表 List`,
+                difficulty: `easy`,
+                description: `創建列表 fruits = ["蘋果", "香蕉", "橙子", "葡萄"]，輸出第一個和最後一個元素。`,
+                starterCode: `fruits = ["蘋果", "香蕉", "橙子", "葡萄"]\n# 輸出第一個和最後一個元素\n`,
+                expectedOutput: `蘋果\n葡萄\n`,
+                hints: [
+                    `索引從 0 開始`,
+                    `負索引 -1 表示最後一個元素`,
+                    `答案：print(fruits[0])\\nprint(fruits[-1])`
+                ],
+                solution: `fruits = ["蘋果", "香蕉", "橙子", "葡萄"]\nprint(fruits[0])\nprint(fruits[-1])`,
+                explanation: `列表索引從 0 開始。負索引從末尾開始計數，-1 表示最後一個元素。`
+            },
+            {
+                id: `data-003`,
+                title: `列表切片`,
+                chapter: `數據結構`,
+                section: `列表 List`,
+                difficulty: `medium`,
+                description: `創建列表 numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]，使用切片獲取索引 2 到 5 的元素（包含 2，不包含 6）。`,
+                starterCode: `numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]\n# 使用切片獲取元素\n`,
+                expectedOutput: `[2, 3, 4, 5]\n`,
+                hints: [
+                    `切片語法：列表[開始:結束]`,
+                    `結束索引不包含在結果中`,
+                    `答案：print(numbers[2:6])`
+                ],
+                solution: `numbers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]\nprint(numbers[2:6])`,
+                explanation: `列表切片使用 [start:end] 語法，返回從 start 到 end-1 的元素。`
+            },
+            {
+                id: `data-004`,
+                title: `元組使用`,
+                chapter: `數據結構`,
+                section: `元組 Tuple`,
+                difficulty: `easy`,
+                description: `創建元組 coordinates = (10, 20)，輸出 x 坐標（第一個元素）和 y 坐標（第二個元素）。`,
+                starterCode: `# 創建元組並輸出坐標\n`,
+                expectedOutput: `10\n20\n`,
+                hints: [
+                    `元組使用圓括號 () 創建`,
+                    `訪問方式與列表相同`,
+                    `答案：coordinates = (10, 20)\\nprint(coordinates[0])\\nprint(coordinates[1])`
+                ],
+                solution: `coordinates = (10, 20)\nprint(coordinates[0])\nprint(coordinates[1])`,
+                explanation: `元組是不可變的序列，使用圓括號創建。一旦創建，元素不能修改。`
+            },
+            {
+                id: `data-005`,
+                title: `字典操作`,
+                chapter: `數據結構`,
+                section: `字典 Dictionary`,
+                difficulty: `medium`,
+                description: `創建字典 person = {"name": "張三", "age": 25, "city": "台北"}，輸出姓名和年齡。`,
+                starterCode: `# 創建字典並輸出\n`,
+                expectedOutput: `張三\n25\n`,
+                hints: [
+                    `字典使用花括號 {} 創建`,
+                    `使用鍵訪問值：字典[鍵]`,
+                    `答案：person = {"name": "張三", "age": 25, "city": "台北"}\\nprint(person["name"])\\nprint(person["age"])`
+                ],
+                solution: `person = {"name": "張三", "age": 25, "city": "台北"}\nprint(person["name"])\nprint(person["age"])`,
+                explanation: `字典是鍵值對的集合，使用鍵來訪問對應的值。`
+            },
+            {
+                id: `data-006`,
+                title: `集合運算`,
+                chapter: `數據結構`,
+                section: `集合 Set`,
+                difficulty: `medium`,
+                description: `創建兩個集合 a = {1, 2, 3, 4} 和 b = {3, 4, 5, 6}，求它們的交集。`,
+                starterCode: `a = {1, 2, 3, 4}\nb = {3, 4, 5, 6}\n# 求交集\n`,
+                expectedOutput: `{3, 4}\n`,
+                hints: [
+                    `使用 & 運算符或 intersection() 方法`,
+                    `交集是兩個集合共有的元素`,
+                    `答案：print(a & b)`
+                ],
+                solution: `a = {1, 2, 3, 4}\nb = {3, 4, 5, 6}\nprint(a & b)`,
+                explanation: `集合是無序且不重複的元素集合。& 運算符用於求交集。`
+            },
+            {
+                id: `data-007`,
+                title: `字符串方法`,
+                chapter: `數據結構`,
+                section: `字符串 String`,
+                difficulty: `easy`,
+                description: `創建字符串 text = "  Hello World  "，移除首尾空格並轉換為大寫，然後輸出。`,
+                starterCode: `text = "  Hello World  "\n# 處理字符串\n`,
+                expectedOutput: `HELLO WORLD\n`,
+                hints: [
+                    `使用 strip() 移除首尾空格`,
+                    `使用 upper() 轉換為大寫`,
+                    `答案：print(text.strip().upper())`
+                ],
+                solution: `text = "  Hello World  "\nprint(text.strip().upper())`,
+                explanation: `字符串有許多內建方法。strip() 移除首尾空白，upper() 轉換為大寫。方法可以鏈式調用。`
+            },
+            {
+                id: `data-008`,
+                title: `列表推導式入門`,
+                chapter: `數據結構`,
+                section: `列表推導式`,
+                difficulty: `medium`,
+                description: `使用列表推導式創建一個包含 1 到 5 的平方的列表。`,
+                starterCode: `# 使用列表推導式\n`,
+                expectedOutput: `[1, 4, 9, 16, 25]\n`,
+                hints: [
+                    `列表推導式語法：[表達式 for 變量 in 序列]`,
+                    `使用 ** 運算符計算平方`,
+                    `答案：squares = [i**2 for i in range(1, 6)]\\nprint(squares)`
+                ],
+                solution: `squares = [i**2 for i in range(1, 6)]\nprint(squares)`,
+                explanation: `列表推導式是創建列表的簡潔方式，可以在一行中完成循環和條件判斷。`
+            },
+            {
+                id: `func-001`,
+                title: `函數定義`,
+                chapter: `函數`,
+                section: `函數定義與調用`,
+                difficulty: `easy`,
+                description: `定義一個函數 greet()，輸出 "你好！"，然後調用這個函數。`,
+                starterCode: `# 定義函數\n\n# 調用函數\n`,
+                expectedOutput: `你好！\n`,
+                hints: [
+                    `使用 def 關鍵字定義函數`,
+                    `函數名後加括號和冒號`,
+                    `答案：def greet():\\n    print("你好！")\\ngreet()`
+                ],
+                solution: `def greet():\n    print("你好！")\ngreet()`,
+                explanation: `函數使用 def 關鍵字定義，可以封裝可重複使用的代碼。調用函數時使用函數名加括號。`
+            },
+            {
+                id: `func-002`,
+                title: `帶參數的函數`,
+                chapter: `函數`,
+                section: `參數傳遞`,
+                difficulty: `easy`,
+                description: `定義函數 greet_person(name)，接收一個姓名參數，輸出 "你好，{name}！"，然後用 "小明" 調用。`,
+                starterCode: `# 定義帶參數的函數\n\n# 調用函數\n`,
+                expectedOutput: `你好，小明！\n`,
+                hints: [
+                    `在括號中定義參數`,
+                    `調用時傳入實際值`,
+                    `答案：def greet_person(name):\\n    print(f"你好，{name}！")\\ngreet_person("小明")`
+                ],
+                solution: `def greet_person(name):\n    print(f"你好，{name}！")\ngreet_person("小明")`,
+                explanation: `函數可以接收參數，使函數更加靈活。參數在函數定義時聲明，調用時傳入實際值。`
+            },
+            {
+                id: `func-003`,
+                title: `返回值`,
+                chapter: `函數`,
+                section: `返回值處理`,
+                difficulty: `medium`,
+                description: `定義函數 add(a, b)，返回兩個數的和，然後計算 5 + 3 並輸出結果。`,
+                starterCode: `# 定義函數\n\n# 調用並輸出結果\n`,
+                expectedOutput: `8\n`,
+                hints: [
+                    `使用 return 語句返回值`,
+                    `可以將返回值賦給變量或直接輸出`,
+                    `答案：def add(a, b):\\n    return a + b\\nprint(add(5, 3))`
+                ],
+                solution: `def add(a, b):\n    return a + b\nprint(add(5, 3))`,
+                explanation: `return 語句用於從函數返回值。函數執行到 return 後會立即結束並返回值。`
+            },
+            {
+                id: `func-004`,
+                title: `默認參數`,
+                chapter: `函數`,
+                section: `默認參數`,
+                difficulty: `medium`,
+                description: `定義函數 power(x, n=2)，計算 x 的 n 次方，默認為平方。分別計算 3 的平方和 2 的立方。`,
+                starterCode: `# 定義帶默認參數的函數\n\n# 調用函數\n`,
+                expectedOutput: `9\n8\n`,
+                hints: [
+                    `默認參數在定義時賦值`,
+                    `調用時可以省略默認參數`,
+                    `答案：def power(x, n=2):\\n    return x ** n\\nprint(power(3))\\nprint(power(2, 3))`
+                ],
+                solution: `def power(x, n=2):\n    return x ** n\nprint(power(3))\nprint(power(2, 3))`,
+                explanation: `默認參數在函數定義時設置默認值，調用時可以省略。如果提供參數，則使用提供的值。`
+            },
+            {
+                id: `func-005`,
+                title: `Lambda 表達式`,
+                chapter: `函數`,
+                section: `Lambda 表達式`,
+                difficulty: `medium`,
+                description: `使用 lambda 創建一個匿名函數，計算兩個數的乘積，然後計算 4 * 5。`,
+                starterCode: `# 創建 lambda 函數\n\n# 調用並輸出\n`,
+                expectedOutput: `20\n`,
+                hints: [
+                    `lambda 語法：lambda 參數: 表達式`,
+                    `lambda 函數可以賦值給變量`,
+                    `答案：multiply = lambda x, y: x * y\\nprint(multiply(4, 5))`
+                ],
+                solution: `multiply = lambda x, y: x * y\nprint(multiply(4, 5))`,
+                explanation: `lambda 是創建匿名函數的簡潔方式，適用於簡單的單行函數。`
+            },
+            {
+                id: `func-006`,
+                title: `內置函數使用`,
+                chapter: `函數`,
+                section: `內置函數`,
+                difficulty: `easy`,
+                description: `使用 len()、max()、min() 函數分別輸出列表 [3, 1, 4, 1, 5, 9, 2, 6] 的長度、最大值和最小值。`,
+                starterCode: `numbers = [3, 1, 4, 1, 5, 9, 2, 6]\n# 使用內置函數\n`,
+                expectedOutput: `8\n9\n1\n`,
+                hints: [
+                    `len() 返回長度`,
+                    `max() 返回最大值`,
+                    `min() 返回最小值`,
+                    `答案：print(len(numbers))\\nprint(max(numbers))\\nprint(min(numbers))`
+                ],
+                solution: `numbers = [3, 1, 4, 1, 5, 9, 2, 6]\nprint(len(numbers))\nprint(max(numbers))\nprint(min(numbers))`,
+                explanation: `Python 提供了許多內置函數，如 len()、max()、min()、sum() 等，可以直接使用。`
+            },
+            {
+                id: `oop-001`,
+                title: `類定義`,
+                chapter: `面向對象編程`,
+                section: `類與對象`,
+                difficulty: `medium`,
+                description: `定義一個 Dog 類，包含屬性 name，然後創建一個名為 "旺財" 的實例並輸出其名字。`,
+                starterCode: `# 定義類\n\n# 創建實例並輸出\n`,
+                expectedOutput: `旺財\n`,
+                hints: [
+                    `使用 class 關鍵字定義類`,
+                    `使用 __init__ 方法初始化屬性`,
+                    `答案：class Dog:\\n    def __init__(self, name):\\n        self.name = name\\ndog = Dog("旺財")\\nprint(dog.name)`
+                ],
+                solution: `class Dog:\n    def __init__(self, name):\n        self.name = name\ndog = Dog("旺財")\nprint(dog.name)`,
+                explanation: `類是創建對象的藍圖。__init__ 是構造方法，用於初始化對象。self 代表實例本身。`
+            },
+            {
+                id: `oop-002`,
+                title: `方法調用`,
+                chapter: `面向對象編程`,
+                section: `方法`,
+                difficulty: `medium`,
+                description: `定義 Dog 類，添加 bark() 方法輸出 "汪汪！"，創建實例並調用該方法。`,
+                starterCode: `# 定義類和方法\n\n# 創建實例並調用方法\n`,
+                expectedOutput: `汪汪！\n`,
+                hints: [
+                    `方法定義在類內部`,
+                    `方法第一個參數是 self`,
+                    `答案：class Dog:\\n    def bark(self):\\n        print("汪汪！")\\ndog = Dog()\\ndog.bark()`
+                ],
+                solution: `class Dog:\n    def bark(self):\n        print("汪汪！")\ndog = Dog()\ndog.bark()`,
+                explanation: `方法是定義在類中的函數。調用方法時使用 對象.方法名() 語法。`
+            },
+            {
+                id: `oop-003`,
+                title: `構造函數`,
+                chapter: `面向對象編程`,
+                section: `構造函數`,
+                difficulty: `medium`,
+                description: `定義 Person 類，構造函數接收 name 和 age，添加 introduce() 方法輸出 "我是{name}，{age}歲"。`,
+                starterCode: `# 定義類\n\n# 創建實例並調用方法\n`,
+                expectedOutput: `我是張三，25歲\n`,
+                hints: [
+                    `__init__ 方法接收參數`,
+                    `使用 self.屬性 保存數據`,
+                    `答案：class Person:\\n    def __init__(self, name, age):\\n        self.name = name\\n        self.age = age\\n    def introduce(self):\\n        print(f"我是{self.name}，{self.age}歲")\\nperson = Person("張三", 25)\\nperson.introduce()`
+                ],
+                solution: `class Person:\n    def __init__(self, name, age):\n        self.name = name\n        self.age = age\n    def introduce(self):\n        print(f"我是{self.name}，{self.age}歲")\nperson = Person("張三", 25)\nperson.introduce()`,
+                explanation: `構造函數 __init__ 在創建對象時自動調用，用於初始化對象的屬性。`
+            },
+            {
+                id: `oop-004`,
+                title: `繼承`,
+                chapter: `面向對象編程`,
+                section: `繼承`,
+                difficulty: `hard`,
+                description: `定義 Animal 類有 speak() 方法，Dog 類繼承 Animal 並重寫 speak() 輸出 "汪汪"。`,
+                starterCode: `# 定義父類和子類\n\n# 創建實例並調用方法\n`,
+                expectedOutput: `汪汪\n`,
+                hints: [
+                    `使用 class 子類(父類): 語法`,
+                    `子類可以重寫父類方法`,
+                    `答案：class Animal:\\n    def speak(self):\\n        pass\\nclass Dog(Animal):\\n    def speak(self):\\n        print("汪汪")\\ndog = Dog()\\ndog.speak()`
+                ],
+                solution: `class Animal:\n    def speak(self):\n        pass\nclass Dog(Animal):\n    def speak(self):\n        print("汪汪")\ndog = Dog()\ndog.speak()`,
+                explanation: `繼承允許子類獲得父類的屬性和方法。子類可以重寫父類的方法來實現不同的行為。`
+            },
+            {
+                id: `oop-005`,
+                title: `特殊方法`,
+                chapter: `面向對象編程`,
+                section: `特殊方法`,
+                difficulty: `hard`,
+                description: `定義 Point 類，實現 __str__ 方法返回 "(x, y)" 格式的字符串。`,
+                starterCode: `# 定義類\n\n# 創建實例並輸出\n`,
+                expectedOutput: `(3, 4)\n`,
+                hints: [
+                    `__str__ 方法定義對象的字符串表示`,
+                    `print() 會自動調用 __str__`,
+                    `答案：class Point:\\n    def __init__(self, x, y):\\n        self.x = x\\n        self.y = y\\n    def __str__(self):\\n        return f"({self.x}, {self.y})"\\npoint = Point(3, 4)\\nprint(point)`
+                ],
+                solution: `class Point:\n    def __init__(self, x, y):\n        self.x = x\n        self.y = y\n    def __str__(self):\n        return f"({self.x}, {self.y})"\npoint = Point(3, 4)\nprint(point)`,
+                explanation: `特殊方法（魔術方法）以雙下劃線開頭和結尾。__str__ 定義對象的字符串表示形式。`
+            },
+            {
+                id: `exception-001`,
+                title: `try-except 基礎`,
+                chapter: `異常處理`,
+                section: `try-except`,
+                difficulty: `medium`,
+                description: `嘗試將字符串 "abc" 轉換為整數，捕獲異常並輸出 "轉換失敗"。`,
+                starterCode: `# 使用 try-except\n`,
+                expectedOutput: `轉換失敗\n`,
+                hints: [
+                    `try 塊包含可能出錯的代碼`,
+                    `except 塊處理異常`,
+                    `答案：try:\\n    int("abc")\\nexcept:\\n    print("轉換失敗")`
+                ],
+                solution: `try:\n    int("abc")\nexcept:\n    print("轉換失敗")`,
+                explanation: `try-except 用於捕獲和處理異常，防止程序崩潰。`
+            },
+            {
+                id: `exception-002`,
+                title: `多異常處理`,
+                chapter: `異常處理`,
+                section: `多異常處理`,
+                difficulty: `medium`,
+                description: `嘗試執行 10 / 0，捕獲 ZeroDivisionError 並輸出 "不能除以零"。`,
+                starterCode: `# 捕獲特定異常\n`,
+                expectedOutput: `不能除以零\n`,
+                hints: [
+                    `except 後面可以指定異常類型`,
+                    `ZeroDivisionError 是除零異常`,
+                    `答案：try:\\n    10 / 0\\nexcept ZeroDivisionError:\\n    print("不能除以零")`
+                ],
+                solution: `try:\n    10 / 0\nexcept ZeroDivisionError:\n    print("不能除以零")`,
+                explanation: `可以捕獲特定類型的異常，使錯誤處理更精確。`
+            },
+            {
+                id: `exception-003`,
+                title: `finally 使用`,
+                chapter: `異常處理`,
+                section: `finally`,
+                difficulty: `medium`,
+                description: `使用 try-except-finally，無論是否出錯都輸出 "執行完畢"。`,
+                starterCode: `# 使用 finally\n`,
+                expectedOutput: `執行完畢\n`,
+                hints: [
+                    `finally 塊總是會執行`,
+                    `通常用於清理資源`,
+                    `答案：try:\\n    pass\\nexcept:\\n    pass\\nfinally:\\n    print("執行完畢")`
+                ],
+                solution: `try:\n    pass\nexcept:\n    pass\nfinally:\n    print("執行完畢")`,
+                explanation: `finally 塊無論是否發生異常都會執行，常用於資源清理。`
+            },
+            {
+                id: `exception-004`,
+                title: `raise 拋出異常`,
+                chapter: `異常處理`,
+                section: `raise`,
+                difficulty: `hard`,
+                description: `定義函數 check_positive(n)，如果 n 小於 0 則拋出 ValueError，否則輸出 "正數"。用 -5 測試。`,
+                starterCode: `# 定義函數\n\n# 測試\n`,
+                expectedOutput: `錯誤：數字必須為正\n`,
+                hints: [
+                    `使用 raise 拋出異常`,
+                    `用 try-except 捕獲`,
+                    `答案：def check_positive(n):\\n    if n < 0:\\n        raise ValueError("數字必須為正")\\n    print("正數")\\ntry:\\n    check_positive(-5)\\nexcept ValueError as e:\\n    print(f"錯誤：{e}")`
+                ],
+                solution: `def check_positive(n):\n    if n < 0:\n        raise ValueError("數字必須為正")\n    print("正數")\ntry:\n    check_positive(-5)\nexcept ValueError as e:\n    print(f"錯誤：{e}")`,
+                explanation: `raise 語句用於主動拋出異常。可以拋出內建異常或自定義異常。`
+            },
+            {
+                id: `advanced-001`,
+                title: `列表推導式`,
+                chapter: `高級特性`,
+                section: `列表推導式`,
+                difficulty: `medium`,
+                description: `使用列表推導式創建 1 到 10 中所有偶數的列表。`,
+                starterCode: `# 使用列表推導式\n`,
+                expectedOutput: `[2, 4, 6, 8, 10]\n`,
+                hints: [
+                    `推導式可以包含條件`,
+                    `語法：[表達式 for 變量 in 序列 if 條件]`,
+                    `答案：evens = [i for i in range(1, 11) if i % 2 == 0]\\nprint(evens)`
+                ],
+                solution: `evens = [i for i in range(1, 11) if i % 2 == 0]\nprint(evens)`,
+                explanation: `列表推導式可以包含條件判斷，只保留滿足條件的元素。`
+            },
+            {
+                id: `advanced-002`,
+                title: `字典推導式`,
+                chapter: `高級特性`,
+                section: `字典推導式`,
+                difficulty: `medium`,
+                description: `使用字典推導式創建 1 到 5 的數字及其平方的字典。`,
+                starterCode: `# 使用字典推導式\n`,
+                expectedOutput: `{1: 1, 2: 4, 3: 9, 4: 16, 5: 25}\n`,
+                hints: [
+                    `字典推導式語法：{鍵:值 for 變量 in 序列}`,
+                    `鍵和值都可以是表達式`,
+                    `答案：squares = {i: i**2 for i in range(1, 6)}\\nprint(squares)`
+                ],
+                solution: `squares = {i: i**2 for i in range(1, 6)}\nprint(squares)`,
+                explanation: `字典推導式是創建字典的簡潔方式，語法類似列表推導式。`
+            },
+            {
+                id: `advanced-003`,
+                title: `生成器基礎`,
+                chapter: `高級特性`,
+                section: `生成器`,
+                difficulty: `hard`,
+                description: `創建生成器函數 countdown(n)，從 n 倒數到 1，使用 yield。從 3 開始倒數。`,
+                starterCode: `# 定義生成器函數\n\n# 使用生成器\n`,
+                expectedOutput: `3\n2\n1\n`,
+                hints: [
+                    `使用 yield 而不是 return`,
+                    `用 for 循環遍歷生成器`,
+                    `答案：def countdown(n):\\n    while n > 0:\\n        yield n\\n        n -= 1\\nfor i in countdown(3):\\n    print(i)`
+                ],
+                solution: `def countdown(n):\n    while n > 0:\n        yield n\n        n -= 1\nfor i in countdown(3):\n    print(i)`,
+                explanation: `生成器使用 yield 返回值，可以暫停和恢復執行，節省記憶體。`
+            },
+            {
+                id: `advanced-004`,
+                title: `裝飾器入門`,
+                chapter: `高級特性`,
+                section: `裝飾器`,
+                difficulty: `hard`,
+                description: `創建裝飾器 uppercase_decorator，將函數返回值轉為大寫。裝飾 get_name() 函數返回 "python"。`,
+                starterCode: `# 定義裝飾器\n\n# 定義並裝飾函數\n\n# 調用函數\n`,
+                expectedOutput: `PYTHON\n`,
+                hints: [
+                    `裝飾器是返回函數的函數`,
+                    `使用 @裝飾器名 語法`,
+                    `答案：def uppercase_decorator(func):\\n    def wrapper():\\n        result = func()\\n        return result.upper()\\n    return wrapper\\n@uppercase_decorator\\ndef get_name():\\n    return "python"\\nprint(get_name())`
+                ],
+                solution: `def uppercase_decorator(func):\n    def wrapper():\n        result = func()\n        return result.upper()\n    return wrapper\n@uppercase_decorator\ndef get_name():\n    return "python"\nprint(get_name())`,
+                explanation: `裝飾器用於修改或增強函數的行為，而不改變函數本身的代碼。`
+            }
+        ];
+
+        const chapters = [
+            {
+                name: `基礎入門`,
+                sections: [
+                    { name: `Hello World`, problems: [`basics-001`] },
+                    { name: `變量與賦值`, problems: [`basics-002`] },
+                    { name: `運算練習`, problems: [`basics-003`] },
+                    { name: `print 函數使用`, problems: [`basics-004`] }
+                ]
+            },
+            {
+                name: `基礎語法`,
+                sections: [
+                    { name: `變量與數據類型`, problems: [`syntax-001`] },
+                    { name: `運算符`, problems: [`syntax-002`] },
+                    { name: `字符串`, problems: [`syntax-003`] },
+                    { name: `類型轉換`, problems: [`syntax-004`] },
+                    { name: `字符串格式化`, problems: [`syntax-005`] },
+                    { name: `輸入輸出`, problems: [`syntax-006`] }
+                ]
+            },
+            {
+                name: `控制流程`,
+                sections: [
+                    { name: `條件語句`, problems: [`control-001`, `control-002`] },
+                    { name: `循環語句`, problems: [`control-003`, `control-004`] },
+                    { name: `break 和 continue`, problems: [`control-005`, `control-006`] }
+                ]
+            },
+            {
+                name: `數據結構`,
+                sections: [
+                    { name: `列表 List`, problems: [`data-001`, `data-002`, `data-003`] },
+                    { name: `元組 Tuple`, problems: [`data-004`] },
+                    { name: `字典 Dictionary`, problems: [`data-005`] },
+                    { name: `集合 Set`, problems: [`data-006`] },
+                    { name: `字符串 String`, problems: [`data-007`] },
+                    { name: `列表推導式`, problems: [`data-008`] }
+                ]
+            },
+            {
+                name: `函數`,
+                sections: [
+                    { name: `函數定義與調用`, problems: [`func-001`] },
+                    { name: `參數傳遞`, problems: [`func-002`] },
+                    { name: `返回值處理`, problems: [`func-003`] },
+                    { name: `默認參數`, problems: [`func-004`] },
+                    { name: `Lambda 表達式`, problems: [`func-005`] },
+                    { name: `內置函數`, problems: [`func-006`] }
+                ]
+            },
+            {
+                name: `面向對象編程`,
+                sections: [
+                    { name: `類與對象`, problems: [`oop-001`] },
+                    { name: `方法`, problems: [`oop-002`] },
+                    { name: `構造函數`, problems: [`oop-003`] },
+                    { name: `繼承`, problems: [`oop-004`] },
+                    { name: `特殊方法`, problems: [`oop-005`] }
+                ]
+            },
+            {
+                name: `異常處理`,
+                sections: [
+                    { name: `try-except`, problems: [`exception-001`] },
+                    { name: `多異常處理`, problems: [`exception-002`] },
+                    { name: `finally`, problems: [`exception-003`] },
+                    { name: `raise`, problems: [`exception-004`] }
+                ]
+            },
+            {
+                name: `高級特性`,
+                sections: [
+                    { name: `列表推導式`, problems: [`advanced-001`] },
+                    { name: `字典推導式`, problems: [`advanced-002`] },
+                    { name: `生成器`, problems: [`advanced-003`] },
+                    { name: `裝飾器`, problems: [`advanced-004`] }
+                ]
+            }
+        ];
+
+        const errorExplanations = {
+            SyntaxError: {
+                pattern: /SyntaxError/,
+                title: `語法錯誤`,
+                messages: [
+                    `檢查是否缺少冒號（:）在 if、for、while、def 等語句後`,
+                    `檢查括號、引號是否成對出現`,
+                    `檢查縮排是否正確（建議使用 4 個空格）`
+                ]
+            },
+            IndentationError: {
+                pattern: /IndentationError/,
+                title: `縮排錯誤`,
+                messages: [
+                    `Python 使用縮排來定義程式碼區塊`,
+                    `確保同一層級的代碼使用相同的縮排（建議 4 個空格）`,
+                    `不要混用 Tab 和空格`
+                ]
+            },
+            NameError: {
+                pattern: /NameError.*name '(.+?)' is not defined/,
+                title: `名稱錯誤`,
+                messages: [
+                    `變量或函數未定義就使用`,
+                    `檢查變量名稱是否拼寫正確`,
+                    `確保變量在使用前已經賦值`
+                ]
+            },
+            TypeError: {
+                pattern: /TypeError/,
+                title: `類型錯誤`,
+                messages: [
+                    `運算符或函數不支持此數據類型`,
+                    `檢查函數參數數量是否正確`,
+                    `檢查是否對不兼容的類型進行操作`
+                ]
+            },
+            ValueError: {
+                pattern: /ValueError/,
+                title: `值錯誤`,
+                messages: [
+                    `值的格式或範圍不正確`,
+                    `檢查類型轉換是否有效（如 int("abc")）`,
+                    `檢查函數參數值是否在有效範圍內`
+                ]
+            },
+            ZeroDivisionError: {
+                pattern: /ZeroDivisionError/,
+                title: `除零錯誤`,
+                messages: [
+                    `不能除以零`,
+                    `檢查除數是否可能為零`,
+                    `在除法前添加條件判斷`
+                ]
+            },
+            IndexError: {
+                pattern: /IndexError/,
+                title: `索引錯誤`,
+                messages: [
+                    `列表索引超出範圍`,
+                    `檢查索引值是否在有效範圍內`,
+                    `記住索引從 0 開始`
+                ]
+            },
+            KeyError: {
+                pattern: /KeyError/,
+                title: `鍵錯誤`,
+                messages: [
+                    `字典中不存在該鍵`,
+                    `使用 get() 方法安全訪問`,
+                    `檢查鍵名是否拼寫正確`
+                ]
+            }
+        };
+
+        function renderSidebar() {
+            const sidebar = document.getElementById(`sidebar`);
+            sidebar.innerHTML = ``;
+
+            chapters.forEach((chapter, chapterIndex) => {
+                const chapterDiv = document.createElement(`div`);
+                chapterDiv.className = `chapter`;
+                
+                const chapterTitle = document.createElement(`div`);
+                chapterTitle.className = `chapter-title`;
+                chapterTitle.innerHTML = `
+                    <span>${chapter.name}</span>
+                    <span class="chapter-icon">▶</span>
+                `;
+                chapterTitle.onclick = () => {
+                    chapterDiv.classList.toggle(`expanded`);
+                };
+
+                const sectionList = document.createElement(`div`);
+                sectionList.className = `section-list`;
+
+                chapter.sections.forEach(section => {
+                    section.problems.forEach(problemId => {
+                        const problem = problems.find(p => p.id === problemId);
+                        if (problem) {
+                            const sectionItem = document.createElement(`div`);
+                            sectionItem.className = `section-item`;
+                            if (completedProblems.has(problemId)) {
+                                sectionItem.classList.add(`completed`);
+                            }
+                            if (problems[currentProblemIndex].id === problemId) {
+                                sectionItem.classList.add(`active`);
+                            }
+                            sectionItem.textContent = problem.title;
+                            sectionItem.onclick = () => {
+                                currentProblemIndex = problems.findIndex(p => p.id === problemId);
+                                loadProblem();
+                                renderSidebar();
+                            };
+                            sectionList.appendChild(sectionItem);
+                        }
+                    });
+                });
+
+                chapterDiv.appendChild(chapterTitle);
+                chapterDiv.appendChild(sectionList);
+                sidebar.appendChild(chapterDiv);
+            });
+        }
+
+        function loadProblem() {
+            const problem = problems[currentProblemIndex];
+            currentHintIndex = 0;
+
+            const difficultyBadge = problem.difficulty === `easy` ? `badge-easy` : 
+                                   problem.difficulty === `medium` ? `badge-medium` : `badge-hard`;
+            const difficultyText = problem.difficulty === `easy` ? `簡單` : 
+                                  problem.difficulty === `medium` ? `中等` : `困難`;
+
+            document.getElementById(`problemTitle`).innerHTML = 
+                `${problem.title} <span class="problem-badge ${difficultyBadge}">${difficultyText}</span>`;
+            document.getElementById(`problemDesc`).innerHTML = `
+                <p>${problem.description}</p>
+                <div class="expected-output">
+                    <strong>預期輸出：</strong><br>
+                    <code>${problem.expectedOutput.replace(/\n/g, `<br>`)}</code>
+                </div>
+            `;
+
+            editor.setValue(problem.starterCode);
+            document.getElementById(`outputContent`).innerHTML = `<div class="output-info">等待執行...</div>`;
+            document.getElementById(`hintPanel`).classList.add(`hidden`);
+            document.getElementById(`hintPanel`).innerHTML = ``;
+
+            editor.clearHistory();
+        }
+
+        async function initPyodide() {
+            try {
+                pyodide = await loadPyodide({
+                    indexURL: `https://cdn.jsdelivr.net/pyodide/v0.24.1/full/`
+                });
+                console.log(`Pyodide 已就緒`);
+                document.getElementById(`loadingOverlay`).classList.add(`hidden`);
+            } catch (error) {
+                console.error(`Pyodide 初始化失敗:`, error);
+                document.getElementById(`loadingOverlay`).innerHTML = `
+                    <div style="color: #F48771; text-align: center;">
+                        <h2>載入失敗</h2>
+                        <p>無法載入 Python 執行環境，請重新整理頁面</p>
+                    </div>
+                `;
+            }
+        }
+
+        async function runCode() {
+            const code = editor.getValue();
+            const outputDiv = document.getElementById(`outputContent`);
+            const problem = problems[currentProblemIndex];
+
+            outputDiv.innerHTML = `<div class="output-info">執行中...</div>`;
+
+            try {
+                await pyodide.runPythonAsync(`
+                    import sys
+                    from io import StringIO
+                    sys.stdout = StringIO()
+                `);
+
+                await pyodide.runPythonAsync(code);
+
+                const output = await pyodide.runPythonAsync(`sys.stdout.getvalue()`);
+
+                const isCorrect = output === problem.expectedOutput;
+                
+                if (isCorrect) {
+                    outputDiv.innerHTML = `
+                        <div class="output-success">✓ 執行成功！</div>
+                        <div class="output-info" style="margin-top: 12px;">輸出結果：</div>
+                        <pre style="color: #4EC9B0; margin-top: 8px;">${output}</pre>
+                        <div class="output-success" style="margin-top: 12px;">🎉 答案正確！</div>
+                    `;
+                    
+                    if (!completedProblems.has(problem.id)) {
+                        completedProblems.add(problem.id);
+                        saveProgress();
+                        updateProgress();
+                        renderSidebar();
+                    }
+                } else {
+                    outputDiv.innerHTML = `
+                        <div class="output-info">執行完成</div>
+                        <div class="output-info" style="margin-top: 12px;">實際輸出：</div>
+                        <pre style="color: #DCDCAA; margin-top: 8px;">${output || `(無輸出)`}</pre>
+                        <div class="output-info" style="margin-top: 12px;">預期輸出：</div>
+                        <pre style="color: #4EC9B0; margin-top: 8px;">${problem.expectedOutput}</pre>
+                        <div class="output-error" style="margin-top: 12px;">⚠ 輸出結果不正確，請檢查邏輯</div>
+                    `;
+                }
+
+            } catch (error) {
+                const errorMessage = error.message;
+                outputDiv.innerHTML = `<div class="output-error">❌ 執行錯誤</div>`;
+                
+                const errorMatch = errorMessage.match(/line (\d+)/);
+                const errorLine = errorMatch ? parseInt(errorMatch[1]) - 1 : null;
+
+                if (errorLine !== null) {
+                    editor.removeLineClass(errorLine, `background`, `error-line`);
+                    editor.addLineClass(errorLine, `background`, `error-line`);
+                }
+
+                let explanation = null;
+                for (const [key, value] of Object.entries(errorExplanations)) {
+                    if (value.pattern.test(errorMessage)) {
+                        explanation = value;
+                        break;
+                    }
+                }
+
+                if (explanation) {
+                    outputDiv.innerHTML += `
+                        <div class="error-explanation">
+                            <h4>${explanation.title}</h4>
+                            <p>錯誤信息：${errorMessage}</p>
+                            <p><strong>可能的原因：</strong></p>
+                            <ul>
+                                ${explanation.messages.map(msg => `<li>${msg}</li>`).join(``)}
+                            </ul>
+                        </div>
+                    `;
+                } else {
+                    outputDiv.innerHTML += `
+                        <pre style="color: #F48771; margin-top: 12px; white-space: pre-wrap;">${errorMessage}</pre>
+                    `;
+                }
+            }
+        }
+
+        function showHint() {
+            const problem = problems[currentProblemIndex];
+            const hintPanel = document.getElementById(`hintPanel`);
+            
+            if (currentHintIndex < problem.hints.length) {
+                hintPanel.classList.remove(`hidden`);
+                const hintDiv = document.createElement(`div`);
+                hintDiv.className = `hint-item`;
+                hintDiv.textContent = `提示 ${currentHintIndex + 1}: ${problem.hints[currentHintIndex]}`;
+                hintPanel.appendChild(hintDiv);
+                currentHintIndex++;
+            } else {
+                alert(`已顯示所有提示`);
+            }
+        }
+
+        function resetCode() {
+            const problem = problems[currentProblemIndex];
+            editor.setValue(problem.starterCode);
+            document.getElementById(`outputContent`).innerHTML = `<div class="output-info">已重置代碼</div>`;
+            document.getElementById(`hintPanel`).classList.add(`hidden`);
+            document.getElementById(`hintPanel`).innerHTML = ``;
+            currentHintIndex = 0;
+        }
+
+        function nextProblem() {
+            if (currentProblemIndex < problems.length - 1) {
+                currentProblemIndex++;
+                loadProblem();
+                renderSidebar();
+            } else {
+                alert(`恭喜！你已完成所有練習題！`);
+            }
+        }
+
+        function clearOutput() {
+            document.getElementById(`outputContent`).innerHTML = `<div class="output-info">輸出已清除</div>`;
+        }
+
+        function formatCode() {
+            const code = editor.getValue();
+            const lines = code.split(`\n`);
+            let indentLevel = 0;
+            const formatted = [];
+
+            for (let line of lines) {
+                const trimmed = line.trim();
+                
+                if (trimmed.startsWith(`else:`) || trimmed.startsWith(`elif `) || 
+                    trimmed.startsWith(`except`) || trimmed.startsWith(`finally:`)) {
+                    indentLevel = Math.max(0, indentLevel - 1);
+                }
+
+                if (trimmed) {
+                    formatted.push(`    `.repeat(indentLevel) + trimmed);
+                } else {
+                    formatted.push(``);
+                }
+
+                if (trimmed.endsWith(`:`)) {
+                    indentLevel++;
+                }
+            }
+
+            editor.setValue(formatted.join(`\n`));
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle(`light-theme`);
+        }
+
+        function adjustFontSize() {
+            currentFontSize = currentFontSize === 14 ? 16 : currentFontSize === 16 ? 18 : 14;
+            document.querySelector(`.CodeMirror`).style.fontSize = `${currentFontSize}px`;
+            document.getElementById(`fontSizeBtn`).textContent = 
+                currentFontSize === 14 ? `A+` : currentFontSize === 16 ? `A++` : `A`;
+        }
+
+        function saveProgress() {
+            localStorage.setItem(`pythonLearningProgress`, JSON.stringify([...completedProblems]));
+        }
+
+        function loadProgress() {
+            const saved = localStorage.getItem(`pythonLearningProgress`);
+            if (saved) {
+                completedProblems = new Set(JSON.parse(saved));
+            }
+        }
+
+        function updateProgress() {
+            const total = problems.length;
+            const completed = completedProblems.size;
+            const percentage = (completed / total * 100).toFixed(0);
+            
+            document.getElementById(`progressText`).textContent = `${completed}/${total}`;
+            document.getElementById(`progressFill`).style.width = `${percentage}%`;
+        }
+
+        window.addEventListener(`load`, async () => {
+            editor = CodeMirror.fromTextArea(document.getElementById(`codeEditor`), {
+                mode: `python`,
+                theme: `monokai`,
+                lineNumbers: true,
+                indentUnit: 4,
+                indentWithTabs: false,
+                lineWrapping: true,
+                matchBrackets: true,
+                autoCloseBrackets: true,
+                extraKeys: {
+                    "Ctrl-Enter": runCode,
+                    "Ctrl-R": resetCode,
+                    "Ctrl-H": showHint
+                }
+            });
+
+            loadProgress();
+            updateProgress();
+            renderSidebar();
+            loadProblem();
+
+            document.getElementById(`runBtn`).addEventListener(`click`, runCode);
+            document.getElementById(`resetBtn`).addEventListener(`click`, resetCode);
+            document.getElementById(`hintBtn`).addEventListener(`click`, showHint);
+            document.getElementById(`nextBtn`).addEventListener(`click`, nextProblem);
+            document.getElementById(`clearOutputBtn`).addEventListener(`click`, clearOutput);
+            document.getElementById(`formatBtn`).addEventListener(`click`, formatCode);
+            document.getElementById(`themeToggle`).addEventListener(`click`, toggleTheme);
+            document.getElementById(`fontSizeBtn`).addEventListener(`click`, adjustFontSize);
+
+            await initPyodide();
+        });
+    </script>
+    <script src="https://cdn.kuse.ai/sdk.prd.js"></script>
+</body>
+</html>
